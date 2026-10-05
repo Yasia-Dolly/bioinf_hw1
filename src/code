@@ -1,0 +1,71 @@
+def parse_fasta(file):
+    sequences = []
+    current_seq = []
+    with open(file, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith(">"):
+                if current_seq:
+                    sequences.append("".join(current_seq))
+                    current_seq = []
+            else:
+                current_seq.append(line)
+        if current_seq:
+            sequences.append("".join(current_seq))
+    return sequences
+
+def calculate_stats(sequence):
+  lengths = sorted([len(s) for s in sequence], reverse=True)
+  num = len(lengths)
+  total_length = sum(lengths)
+  max_el = lengths[0]
+  half_lengths = sum(lengths) / 2
+  cumulative = 0
+  n50 = 0
+  for l in lengths:
+    cumulative += l
+    if cumulative >= half_lengths:
+      n50 = l
+      break
+  return num, total_length, max_el, n50
+
+contigs = parse_fasta("out_contig.fa")
+contigs_stats = calculate_stats(contigs)
+num, total, max, n50 = contigs_stats
+
+print("contig's statistics")
+print(f"Количество контигов: {num:,}")
+print(f"Общая длина: {total:,} bp")
+print(f"Самый длинный: {max:,} bp")
+print(f"N50: {n50:,} bp")
+
+  scaffolds = parse_fasta("out_scaffold.fa")
+scaffolds_stats = calculate_stats(scaffolds)
+number_scaffolds, total_length_scaffolds, max_scaffold, n50_scaffold = scaffolds_stats
+
+print("scaffold's statistics")
+print(f"Количество скаффолдов: {number_scaffolds:,}")
+print(f"Общая длина: {total_length_scaffolds:,} bp")
+print(f"Самый длинный: {max_scaffold:,} bp")
+print(f"N50: {n50_scaffold:,} bp")
+
+import re
+longest = max(scaffolds, key=len)
+gaps = re.findall(r"N+", longest)
+print(f"\nГэпов в самом длинном: {len(gaps)}")
+print(f"Общая длина гэпов: {sum(len(g) for g in gaps)} bp")
+
+scaffolds_final = parse_fasta("out_gapClosed.fa")
+stats_final = calculate_stats(scaffolds_final)
+number_fscaf, total_length_fscaf, max_fscaf, n50_fscaf = stats_final
+
+print("gap_close statistics")
+print(f"Количество скаффолдов: {number_fscaf:,}")
+print(f"Общая длина: {total_length_fscaf:,} bp")
+print(f"Самый длинный: {max_fscaf:,} bp")
+print(f"N50: {n50_fscaf:,} bp")
+
+longest_final = max(scaffolds_final, key=len)
+gaps_final = re.findall(r"N+", longest_final)
+print(f"\nГэпов в самом длинном: {len(gaps_final)}")
+print(f"Общая длина гэпов: {sum(len(g) for g in gaps_final):,} bp")
